@@ -16,6 +16,19 @@ interface EmergencyContact {
   phone: string;
 }
 
+// Define specific types for database responses to prevent deep type inference issues
+interface ContactRecord {
+  name: string;
+  phone: string;
+}
+
+interface ProfileRecord {
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
 const SOSButton = ({ hidden = false }: SOSButtonProps) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -46,19 +59,13 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Use more specific type definitions for the query results
-        interface ContactRecord {
-          name: string;
-          phone: string;
-        }
-        
         const { data, error } = await supabase
           .from('contacts')
           .select('name, phone');
         
         if (error) throw error;
         
-        // Handle the response data with proper typing
+        // Explicitly type the data to prevent deep inference
         const contactsData = (data || []) as ContactRecord[];
         
         // Map to the component's internal structure
@@ -72,11 +79,6 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
         
         // If no emergency contacts, also check profile
         if (formattedContacts.length === 0) {
-          interface ProfileRecord {
-            emergency_contact_name?: string;
-            emergency_contact_phone?: string;
-          }
-          
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('emergency_contact_name, emergency_contact_phone')
