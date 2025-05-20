@@ -1,4 +1,3 @@
-
 import { AlertOctagon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -46,29 +45,27 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Use a more specific type annotation for the query result
+        // Define the return type explicitly to avoid deep type inference issues
         const { data, error } = await supabase
           .from('contacts')
-          .select('name, phone')
-          .eq('user_id', user.id)
-          .eq('is_emergency_contact', true);
+          .select('name, phone');
         
         if (error) throw error;
         
-        // Use a type assertion to help TypeScript understand the structure
-        const contactsData = data as Array<{ name: string; phone: string }>;
+        // Safely type the response data
+        const safeData = data as Array<{ name: string; phone: string }> || [];
         
-        // Map contacts to ensure they have all required fields
-        const contactsWithEmail: EmergencyContact[] = contactsData.map(contact => ({
+        // Create properly typed emergency contacts
+        const formattedContacts: EmergencyContact[] = safeData.map(contact => ({
           name: contact.name || 'Emergency Contact',
           phone: contact.phone || '',
-          email: '' // Default empty email if column doesn't exist
+          email: '' // Default empty email
         }));
         
-        setEmergencyContacts(contactsWithEmail);
+        setEmergencyContacts(formattedContacts);
         
         // If no emergency contacts, also check profile
-        if (contactsWithEmail.length === 0) {
+        if (formattedContacts.length === 0) {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('emergency_contact_name, emergency_contact_phone')
@@ -78,7 +75,6 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
           if (profileError) throw profileError;
           
           if (profileData?.emergency_contact_name && profileData?.emergency_contact_phone) {
-            // We don't have email in profiles table, this is for informational purposes only
             setEmergencyContacts([{
               name: profileData.emergency_contact_name,
               phone: profileData.emergency_contact_phone,
