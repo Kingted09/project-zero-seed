@@ -1,12 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Footer from '@/components/Footer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1 flex flex-col">
+        <Hero />
+        <section className="container py-8 md:py-12 lg:py-24">
+          <div className="mx-auto grid max-w-5xl gap-6 lg:gap-12">
+            {/* Your content will go here */}
+          </div>
+        </section>
+      </main>
+      <Footer />
     </div>
   );
 };
