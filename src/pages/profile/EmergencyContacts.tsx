@@ -1,133 +1,118 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Plus, User, Phone, Heart } from "lucide-react";
+import { ChevronRight, Plus, User, Phone, Heart, Mail, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-
-interface EmergencyContact {
-  name: string;
-  relationship: string;
-  phone: string;
-}
+import { useGetContacts, useAddEmergencyContact, useDeleteContact, Contact } from "@/services/contactsService";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EmergencyContacts = () => {
   const navigate = useNavigate();
-  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const { user } = useAuth();
+  const { data: contacts, isLoading, error } = useGetContacts();
+  const addEmergencyContactMutation = useAddEmergencyContact();
+  const deleteContactMutation = useDeleteContact();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentContact, setCurrentContact] = useState<EmergencyContact>({
+  const [currentContact, setCurrentContact] = useState<Partial<Contact>>({
     name: "",
     relationship: "",
-    phone: ""
+    phone: "",
+    email: ""
   });
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editIndex, setEditIndex] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Load contacts from localStorage
-    const savedProfile = localStorage.getItem("userProfile");
-    if (savedProfile) {
-      try {
-        const profile = JSON.parse(savedProfile);
-        if (profile.emergencyContacts) {
-          setContacts(profile.emergencyContacts);
-        }
-      } catch (e) {
-        console.error("Failed to load emergency contacts:", e);
-      }
-    }
-  }, []);
-
-  const handleOpenDialog = (contact?: EmergencyContact, index?: number) => {
+  const handleOpenDialog = (contact?: Contact) => {
     if (contact) {
       setCurrentContact(contact);
-      setEditIndex(index || null);
+      setEditIndex(contact.id);
     } else {
-      setCurrentContact({ name: "", relationship: "", phone: "" });
+      setCurrentContact({ 
+        name: "", 
+        relationship: "", 
+        phone: "", 
+        email: "",
+        is_emergency_contact: true
+      });
       setEditIndex(null);
     }
     setIsDialogOpen(true);
   };
 
-  const handleSaveContact = () => {
+  const handleSaveContact = async () => {
     if (!currentContact.name || !currentContact.phone) {
-      toast({
-        title: "Missing information",
-        description: "Please provide at least a name and phone number",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a name and phone number"
       });
       return;
     }
 
-    let newContacts = [...contacts];
-    
-    if (editIndex !== null) {
-      // Edit existing contact
-      newContacts[editIndex] = currentContact;
-    } else {
-      // Add new contact
-      newContacts.push(currentContact);
+    // Validate phone number
+    const phoneRegex = /^[+\d\s()-]{7,20}$/;
+    if (!phoneRegex.test(currentContact.phone || "")) {
+      toast.error("Invalid phone number", {
+        description: "Please enter a valid phone number"
+      });
+      return;
+    }
+
+    // Validate email if provided
+    if (currentContact.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(currentContact.email)) {
+        toast.error("Invalid email", {
+          description: "Please enter a valid email address"
+        });
+        return;
+      }
     }
     
-    // Save to localStorage
     try {
-      const savedProfile = localStorage.getItem("userProfile") || "{}";
-      const profile = JSON.parse(savedProfile);
-      const updatedProfile = {
-        ...profile,
-        emergencyContacts: newContacts
-      };
-      localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+      await addEmergencyContactMutation.mutateAsync({
+        name: currentContact.name || "",
+        phone: currentContact.phone || "",
+        email: currentContact.email,
+        relationship: currentContact.relationship,
+      });
       
-      setContacts(newContacts);
-      setIsDialogOpen(false);
-      
-      toast({
-        title: editIndex !== null ? "Contact updated" : "Contact added",
+      toast.success(editIndex !== null ? "Contact updated" : "Contact added", {
         description: editIndex !== null 
           ? "Your emergency contact has been updated successfully" 
           : "Your emergency contact has been added successfully"
       });
+      
+      setIsDialogOpen(false);
     } catch (e) {
       console.error("Failed to save contact:", e);
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your contact",
-        variant: "destructive"
+      toast.error("Save failed", {
+        description: "There was an error saving your contact"
       });
     }
   };
 
-  const handleDeleteContact = (index: number) => {
-    const newContacts = [...contacts];
-    newContacts.splice(index, 1);
-    
-    // Save to localStorage
+  const handleDeleteContact = async (id: string) => {
     try {
-      const savedProfile = localStorage.getItem("userProfile") || "{}";
-      const profile = JSON.parse(savedProfile);
-      const updatedProfile = {
-        ...profile,
-        emergencyContacts: newContacts
-      };
-      localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+      await deleteContactMutation.mutateAsync(id);
       
-      setContacts(newContacts);
-      
-      toast({
-        title: "Contact deleted",
+      toast.success("Contact deleted", {
         description: "Your emergency contact has been removed"
       });
+      
+      setIsDialogOpen(false);
     } catch (e) {
       console.error("Failed to delete contact:", e);
-      toast({
-        title: "Delete failed",
-        description: "There was an error removing your contact",
-        variant: "destructive"
+      toast.error("Delete failed", {
+        description: "There was an error removing your contact"
       });
     }
   };
+
+  // Filter only emergency contacts
+  const emergencyContacts = contacts?.filter(contact => contact.is_emergency_contact) || [];
 
   return (
     <div className="page-container">
@@ -138,13 +123,26 @@ const EmergencyContacts = () => {
         </Button>
       </div>
 
-      {contacts.length > 0 ? (
+      {isLoading ? (
         <div className="space-y-3">
-          {contacts.map((contact, index) => (
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-full flex items-center p-4 bg-card rounded-lg shadow-subtle">
+              <Skeleton className="h-10 w-10 rounded-full mr-3" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-32 mb-2" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <Skeleton className="h-6 w-6" />
+            </div>
+          ))}
+        </div>
+      ) : emergencyContacts.length > 0 ? (
+        <div className="space-y-3">
+          {emergencyContacts.map((contact) => (
             <button
-              key={index}
+              key={contact.id}
               className="w-full flex items-center justify-between p-4 bg-card rounded-lg shadow-subtle hover:bg-accent/50 transition-colors"
-              onClick={() => handleOpenDialog(contact, index)}
+              onClick={() => handleOpenDialog(contact)}
             >
               <div className="flex items-center">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
@@ -152,7 +150,7 @@ const EmergencyContacts = () => {
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium">{contact.name}</h3>
-                  <p className="text-xs text-muted-foreground">{contact.relationship}</p>
+                  <p className="text-xs text-muted-foreground">{contact.relationship || "Emergency Contact"}</p>
                 </div>
               </div>
               <div className="flex items-center">
@@ -197,7 +195,7 @@ const EmergencyContacts = () => {
               <label className="text-sm font-medium">Name</label>
               <Input
                 placeholder="Contact name"
-                value={currentContact.name}
+                value={currentContact.name || ""}
                 onChange={(e) => setCurrentContact({...currentContact, name: e.target.value})}
               />
             </div>
@@ -206,7 +204,7 @@ const EmergencyContacts = () => {
               <label className="text-sm font-medium">Relationship</label>
               <Input
                 placeholder="E.g. Spouse, Parent, Friend"
-                value={currentContact.relationship}
+                value={currentContact.relationship || ""}
                 onChange={(e) => setCurrentContact({...currentContact, relationship: e.target.value})}
               />
             </div>
@@ -216,9 +214,22 @@ const EmergencyContacts = () => {
               <Input
                 type="tel"
                 placeholder="Phone number"
-                value={currentContact.phone}
+                value={currentContact.phone || ""}
                 onChange={(e) => setCurrentContact({...currentContact, phone: e.target.value})}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email Address</label>
+              <Input
+                type="email"
+                placeholder="Email address for notifications"
+                value={currentContact.email || ""}
+                onChange={(e) => setCurrentContact({...currentContact, email: e.target.value})}
+              />
+              <p className="text-xs text-muted-foreground">
+                Email is required for emergency notifications
+              </p>
             </div>
           </div>
           
@@ -227,11 +238,12 @@ const EmergencyContacts = () => {
               <Button 
                 variant="destructive" 
                 onClick={() => {
-                  handleDeleteContact(editIndex);
-                  setIsDialogOpen(false);
+                  if (editIndex) {
+                    handleDeleteContact(editIndex);
+                  }
                 }}
               >
-                Delete
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>
             )}
             <div className="flex space-x-2">

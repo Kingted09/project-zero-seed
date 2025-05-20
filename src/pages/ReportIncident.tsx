@@ -75,7 +75,7 @@ const ReportIncident = () => {
         toast.success("Images uploaded successfully");
       }
       
-      // Create report
+      // Create report only (removed alert creation)
       await createReportMutation.mutateAsync({
         title,
         description,
@@ -86,21 +86,6 @@ const ReportIncident = () => {
         is_public: true,
         photos: uploadedPhotoPaths.length > 0 ? uploadedPhotoPaths : undefined
       });
-      
-      // Also create an alert based on the report
-      if (latitude && longitude) {
-        // Fix the alert creation by using the correct field names
-        await supabase.from('alerts').insert({
-          title: title, // Include title
-          description: description, // Pass description
-          alert_type: incidentType as "weather" | "police" | "fire" | "health" | "other",
-          latitude,
-          longitude,
-          radius: 5000, // 5km radius
-          severity: 'medium',
-          created_by: user.id,
-        });
-      }
       
       toast.success("Report submitted successfully", {
         description: "Thank you for your report. Authorities have been notified."
