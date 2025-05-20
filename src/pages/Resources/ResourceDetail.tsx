@@ -26,15 +26,15 @@ const ResourceDetail = () => {
   const { data: resource, isLoading } = useQuery({
     queryKey: ['resource', id],
     queryFn: async () => {
-      // Using from('resources') to query a custom table that isn't in the TypeScript definitions
+      // Use a type assertion to handle the custom table
       const { data, error } = await supabase
-        .from('resources')
+        .from('resources' as any)
         .select('*')
         .eq('id', id)
         .single();
         
       if (error) throw error;
-      return data as Resource;
+      return data as unknown as Resource;
     }
   });
 
