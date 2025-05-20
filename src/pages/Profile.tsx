@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Shield, Settings, ChevronRight, LogOut, MapPin, Phone, Droplet, Heart, Bell, Mail } from "lucide-react";
@@ -71,7 +70,7 @@ const Profile = () => {
         location: profileData.city ? `${profileData.city}, ${profileData.state || ''}`.trim() : 'No location set',
         phone: profileData.phone || 'No phone set',
         email: user?.email || 'No email set',
-        bloodType: profileData.blood_type || "",
+        bloodType: profileData.bloodType || "", // Changed from blood_type to bloodType
         allergies: allergyArray,
         emergencyContacts: [],
       });

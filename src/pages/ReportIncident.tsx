@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, AlertTriangle, Camera, MapPin, AlertCircle, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,9 +90,8 @@ const ReportIncident = () => {
       // Also create an alert based on the report
       if (latitude && longitude) {
         await supabase.from('alerts').insert({
-          title,
-          description,
-          alert_type: incidentType,
+          description: title, // Use title as description
+          alert_type: incidentType as "weather" | "police" | "fire" | "health" | "other",
           latitude,
           longitude,
           radius: 5000, // 5km radius

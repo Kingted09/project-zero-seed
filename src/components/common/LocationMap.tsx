@@ -8,13 +8,19 @@ interface LocationMapProps {
   onLocationSelect?: (location: { lat: number; lng: number }) => void;
   latitude?: number;
   longitude?: number;
+  zoom?: number; // Added zoom prop
+  showDirections?: boolean; // Added showDirections prop
+  className?: string; // Added className prop
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({ 
   location, 
   onLocationSelect,
   latitude,
-  longitude 
+  longitude,
+  zoom = 14,
+  showDirections,
+  className = "" 
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>(
@@ -41,7 +47,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[200px]">
+    <div className={`relative w-full h-[200px] ${className}`}>
       {isLoading ? (
         <div className="absolute inset-0 flex items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -50,6 +56,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
         <GoogleMap
           height="200px"
           center={mapCenter}
+          zoom={zoom}
           onMapClick={onLocationSelect ? handleMapClick : undefined}
           markers={mapCenter ? [{ position: mapCenter, title: location || "Selected Location" }] : []}
         />

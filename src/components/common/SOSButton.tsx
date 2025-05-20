@@ -10,12 +10,18 @@ interface SOSButtonProps {
   hidden?: boolean;
 }
 
+interface EmergencyContact {
+  name: string;
+  email: string; 
+  phone: string;
+}
+
 const SOSButton = ({ hidden = false }: SOSButtonProps) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isSOSActive, setIsSOSActive] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
-  const [emergencyContacts, setEmergencyContacts] = useState<{ name: string; email: string; phone: string }[]>([]);
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
   
   // Get user location
   useEffect(() => {
@@ -40,17 +46,22 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Fetch emergency contacts from the contacts table
-        const { data, error } = await supabase
+        // Check if contacts table has email column
+        const { data: columns, error: columnsError } = await supabase
           .from('contacts')
-          .select('name, phone, email')
+          .select('name, phone')
           .eq('user_id', user.id)
           .eq('is_emergency_contact', true);
         
-        if (error) throw error;
+        if (columnsError) throw columnsError;
         
-        // Filter to only include contacts with email addresses
-        const contactsWithEmail = data.filter(contact => contact.email);
+        // Map contacts to ensure they have all required fields
+        const contactsWithEmail: EmergencyContact[] = (columns || []).map(contact => ({
+          name: contact.name || 'Emergency Contact',
+          phone: contact.phone || '',
+          email: '' // Default empty email if column doesn't exist
+        }));
+        
         setEmergencyContacts(contactsWithEmail);
         
         // If no emergency contacts, also check profile
