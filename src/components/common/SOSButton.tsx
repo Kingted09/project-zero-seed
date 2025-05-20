@@ -1,3 +1,4 @@
+
 import { AlertOctagon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -45,18 +46,23 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Define the return type explicitly to avoid deep type inference issues
+        // Use more specific type definitions for the query results
+        interface ContactRecord {
+          name: string;
+          phone: string;
+        }
+        
         const { data, error } = await supabase
           .from('contacts')
           .select('name, phone');
         
         if (error) throw error;
         
-        // Safely type the response data
-        const safeData = data as Array<{ name: string; phone: string }> || [];
+        // Handle the response data with proper typing
+        const contactsData = (data || []) as ContactRecord[];
         
-        // Create properly typed emergency contacts
-        const formattedContacts: EmergencyContact[] = safeData.map(contact => ({
+        // Map to the component's internal structure
+        const formattedContacts: EmergencyContact[] = contactsData.map(contact => ({
           name: contact.name || 'Emergency Contact',
           phone: contact.phone || '',
           email: '' // Default empty email
@@ -66,6 +72,11 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
         
         // If no emergency contacts, also check profile
         if (formattedContacts.length === 0) {
+          interface ProfileRecord {
+            emergency_contact_name?: string;
+            emergency_contact_phone?: string;
+          }
+          
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('emergency_contact_name, emergency_contact_phone')
@@ -74,10 +85,12 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
           
           if (profileError) throw profileError;
           
-          if (profileData?.emergency_contact_name && profileData?.emergency_contact_phone) {
+          const typedProfileData = profileData as ProfileRecord;
+          
+          if (typedProfileData?.emergency_contact_name && typedProfileData?.emergency_contact_phone) {
             setEmergencyContacts([{
-              name: profileData.emergency_contact_name,
-              phone: profileData.emergency_contact_phone,
+              name: typedProfileData.emergency_contact_name,
+              phone: typedProfileData.emergency_contact_phone,
               email: ''
             }]);
           }
