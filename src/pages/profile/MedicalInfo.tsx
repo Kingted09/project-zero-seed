@@ -168,7 +168,7 @@ const MedicalInfo = () => {
                       <SelectValue placeholder="Select your blood type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unknown</SelectItem>
+                      <SelectItem value="unknown">Unknown</SelectItem>
                       <SelectItem value="A+">A+</SelectItem>
                       <SelectItem value="A-">A-</SelectItem>
                       <SelectItem value="B+">B+</SelectItem>
