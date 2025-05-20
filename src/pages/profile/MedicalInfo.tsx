@@ -20,7 +20,7 @@ const MedicalInfo = () => {
   const [isAllergyDialogOpen, setIsAllergyDialogOpen] = useState(false);
   const [newAllergy, setNewAllergy] = useState("");
   const [allergies, setAllergies] = useState<string[]>([]);
-  const [bloodType, setBloodType] = useState("");
+  const [bloodType, setBloodType] = useState("unknown");
   const [medications, setMedications] = useState("");
   const [medicalConditions, setMedicalConditions] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -188,7 +188,7 @@ const MedicalInfo = () => {
                   </Select>
                 ) : (
                   <div className="p-3 bg-card rounded-md border">
-                    {bloodType || "Not specified"}
+                    {bloodType === "unknown" ? "Not specified" : bloodType}
                   </div>
                 )}
               </div>

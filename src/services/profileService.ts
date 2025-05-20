@@ -19,6 +19,7 @@ interface ProfileData {
   emergency_contact_name?: string | null;
   emergency_contact_phone?: string | null;
   emergency_contact_email?: string | null;
+  date_of_birth?: string | null;
   [key: string]: any;
 }
 

@@ -79,8 +79,8 @@ const EmergencyContacts = () => {
       await addEmergencyContactMutation.mutateAsync({
         name: contactData.name || "",
         phone: contactData.phone || "",
-        email: contactData.email,
-        relationship: contactData.relationship,
+        email: contactData.email || null,
+        relationship: contactData.relationship || null,
       });
       
       toast.success(editIndex !== null ? "Contact updated" : "Contact added", {

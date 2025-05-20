@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfileData } from "@/hooks/use-profile-data";
+import { useGetProfile } from "@/services/profileService";
 import { useUpdateProfile } from "@/services/profileService";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profileData, isLoading } = useProfileData();
+  const { data: profileData, isLoading, error } = useGetProfile();
   const updateProfileMutation = useUpdateProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [userInfo, setUserInfo] = useState({
@@ -50,7 +50,7 @@ const PersonalInfo = () => {
         email: user?.email || '',
         phone: profileData.phone || '',
         address: profileData.address || '',
-        dob: "1985-06-15" // Default value as it's not in the database schema
+        dob: profileData.date_of_birth || "1985-06-15" // Use profile DOB if available
       });
     }
   }, [profileData, user]);
@@ -64,7 +64,8 @@ const PersonalInfo = () => {
         first_name: firstName || null,
         last_name: lastName || null,
         phone: userInfo.phone || null,
-        address: userInfo.address || null
+        address: userInfo.address || null,
+        date_of_birth: userInfo.dob || null
       });
       
       toast.success("Profile updated", {
@@ -79,6 +80,18 @@ const PersonalInfo = () => {
       });
     }
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-full p-4">
+        <div className="bg-red-50 text-red-800 p-4 rounded-md mb-4">
+          <h3 className="font-medium">Failed to load profile</h3>
+          <p className="text-sm">{error instanceof Error ? error.message : "Unknown error"}</p>
+        </div>
+        <Button onClick={() => window.location.reload()}>Try again</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -198,7 +211,7 @@ const PersonalInfo = () => {
                   />
                 ) : (
                   <div className="p-3 bg-card rounded-md border">
-                    {new Date(userInfo.dob).toLocaleDateString()}
+                    {userInfo.dob ? new Date(userInfo.dob).toLocaleDateString() : 'Not set'}
                   </div>
                 )}
               </div>

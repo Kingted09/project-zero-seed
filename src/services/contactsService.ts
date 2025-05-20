@@ -7,8 +7,8 @@ export interface Contact {
   id: string;
   name: string;
   phone: string;
-  email?: string;
-  relationship?: string;
+  email?: string | null;
+  relationship?: string | null;
   type: string;
   is_favorite: boolean;
   created_at: string;
@@ -189,8 +189,8 @@ export const useAddEmergencyContact = () => {
     mutationFn: async (contact: { 
       name: string; 
       phone: string; 
-      email?: string;
-      relationship?: string;
+      email?: string | null;
+      relationship?: string | null;
     }) => {
       if (!user) throw new Error("User not authenticated");
 
@@ -201,7 +201,7 @@ export const useAddEmergencyContact = () => {
           phone: contact.phone,
           email: contact.email || null,
           relationship: contact.relationship || null,
-          type: "personal",
+          type: "emergency",
           is_favorite: true,
           is_emergency_contact: true,
           user_id: user.id,
