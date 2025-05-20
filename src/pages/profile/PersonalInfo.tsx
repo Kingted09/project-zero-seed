@@ -1,14 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileData } from "@/hooks/use-profile-data";
 import { useUpdateProfile } from "@/services/profileService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const PersonalInfo = () => {
 
   useEffect(() => {
     if (profileData) {
+      console.log("Profile data loaded:", profileData);
       // Extract user metadata from auth or profile data
       const firstName = profileData.first_name || '';
       const lastName = profileData.last_name || '';
@@ -65,137 +67,156 @@ const PersonalInfo = () => {
         address: userInfo.address || null
       });
       
-      toast({
-        title: "Profile updated",
+      toast.success("Profile updated", {
         description: "Your personal information has been updated successfully"
       });
       
       setIsEditing(false);
     } catch (error: any) {
       console.error("Failed to update profile:", error);
-      toast({
-        title: "Update failed",
-        description: error.message || "There was an error updating your profile",
-        variant: "destructive"
+      toast.error("Update failed", {
+        description: error.message || "There was an error updating your profile"
       });
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="page-container flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="page-container">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Personal Information</h1>
-        <Button 
-          variant={isEditing ? "outline" : "default"} 
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
+    <div className="flex flex-col min-h-full">
+      <div className="page-header border-b border-border">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate("/app/profile")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold">Personal Information</h1>
+            <p className="text-xs text-muted-foreground">
+              Manage your basic profile information
+            </p>
+          </div>
+        </div>
       </div>
+      
+      <div className="page-container pb-24">
+        {isLoading ? (
+          <div className="space-y-4 pt-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-6 pt-4">
+              <h2 className="text-lg font-semibold">Your Details</h2>
+              <Button 
+                variant={isEditing ? "outline" : "default"} 
+                onClick={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
+              >
+                {isEditing ? "Cancel" : "Edit Information"}
+              </Button>
+            </div>
 
-      <div className="bg-card rounded-lg p-4 shadow-subtle space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <User className="h-5 w-5 text-primary mr-2" />
-            <label className="text-sm font-medium">Full Name</label>
-          </div>
-          {isEditing ? (
-            <Input 
-              value={userInfo.name}
-              onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
-            />
-          ) : (
-            <p className="text-foreground pl-7">{userInfo.name || 'Not set'}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Mail className="h-5 w-5 text-primary mr-2" />
-            <label className="text-sm font-medium">Email</label>
-          </div>
-          <p className="text-foreground pl-7">{userInfo.email}</p>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Phone className="h-5 w-5 text-primary mr-2" />
-            <label className="text-sm font-medium">Phone</label>
-          </div>
-          {isEditing ? (
-            <Input 
-              type="tel"
-              value={userInfo.phone}
-              onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
-            />
-          ) : (
-            <p className="text-foreground pl-7">{userInfo.phone || 'Not set'}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <MapPin className="h-5 w-5 text-primary mr-2" />
-            <label className="text-sm font-medium">Address</label>
-          </div>
-          {isEditing ? (
-            <Textarea 
-              value={userInfo.address}
-              onChange={(e) => setUserInfo({...userInfo, address: e.target.value})}
-            />
-          ) : (
-            <p className="text-foreground pl-7">{userInfo.address || 'Not set'}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Calendar className="h-5 w-5 text-primary mr-2" />
-            <label className="text-sm font-medium">Date of Birth</label>
-          </div>
-          {isEditing ? (
-            <Input 
-              type="date"
-              value={userInfo.dob}
-              onChange={(e) => setUserInfo({...userInfo, dob: e.target.value})}
-            />
-          ) : (
-            <p className="text-foreground pl-7">{new Date(userInfo.dob).toLocaleDateString()}</p>
-          )}
-        </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <User className="h-5 w-5 text-primary mr-2" />
+                  <label className="text-sm font-medium">Full Name</label>
+                </div>
+                {isEditing ? (
+                  <Input 
+                    value={userInfo.name}
+                    onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
+                  />
+                ) : (
+                  <div className="p-3 bg-card rounded-md border">
+                    {userInfo.name || 'Not set'}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <Mail className="h-5 w-5 text-primary mr-2" />
+                  <label className="text-sm font-medium">Email</label>
+                </div>
+                <div className="p-3 bg-card rounded-md border">
+                  {userInfo.email}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <Phone className="h-5 w-5 text-primary mr-2" />
+                  <label className="text-sm font-medium">Phone</label>
+                </div>
+                {isEditing ? (
+                  <Input 
+                    type="tel"
+                    value={userInfo.phone}
+                    onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
+                  />
+                ) : (
+                  <div className="p-3 bg-card rounded-md border">
+                    {userInfo.phone || 'Not set'}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <MapPin className="h-5 w-5 text-primary mr-2" />
+                  <label className="text-sm font-medium">Address</label>
+                </div>
+                {isEditing ? (
+                  <Textarea 
+                    value={userInfo.address}
+                    onChange={(e) => setUserInfo({...userInfo, address: e.target.value})}
+                  />
+                ) : (
+                  <div className="p-3 bg-card rounded-md border whitespace-pre-line">
+                    {userInfo.address || 'Not set'}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 text-primary mr-2" />
+                  <label className="text-sm font-medium">Date of Birth</label>
+                </div>
+                {isEditing ? (
+                  <Input 
+                    type="date"
+                    value={userInfo.dob}
+                    onChange={(e) => setUserInfo({...userInfo, dob: e.target.value})}
+                  />
+                ) : (
+                  <div className="p-3 bg-card rounded-md border">
+                    {new Date(userInfo.dob).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
 
-        {isEditing && (
-          <div className="pt-4">
-            <Button 
-              className="w-full" 
-              onClick={handleSave}
-              disabled={updateProfileMutation.isPending}
-            >
-              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+              {isEditing && (
+                <div className="pt-4">
+                  <Button 
+                    className="w-full" 
+                    onClick={handleSave}
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
         )}
-      </div>
-
-      <div className="mt-8">
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={() => navigate("/app/profile")}
-        >
-          Back to Profile
-        </Button>
       </div>
     </div>
   );

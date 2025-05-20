@@ -72,11 +72,15 @@ const EmergencyContacts = () => {
     }
     
     try {
+      // Remove the is_emergency_contact flag from currentContact to avoid potential conflicts
+      // and let the service handle this properly
+      const { is_emergency_contact, ...contactData } = currentContact;
+      
       await addEmergencyContactMutation.mutateAsync({
-        name: currentContact.name || "",
-        phone: currentContact.phone || "",
-        email: currentContact.email,
-        relationship: currentContact.relationship,
+        name: contactData.name || "",
+        phone: contactData.phone || "",
+        email: contactData.email,
+        relationship: contactData.relationship,
       });
       
       toast.success(editIndex !== null ? "Contact updated" : "Contact added", {

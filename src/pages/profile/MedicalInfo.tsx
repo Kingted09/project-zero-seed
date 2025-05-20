@@ -28,13 +28,16 @@ const MedicalInfo = () => {
   // Load profile data
   useEffect(() => {
     if (profile) {
-      setBloodType(profile.blood_type || "");
+      console.log("Medical info loaded:", profile);
+      setBloodType(profile.blood_type || "unknown");
       setMedications(profile.medications || "");
       setMedicalConditions(profile.medical_conditions || "");
       
       // Parse allergies from comma-separated string
       if (profile.allergies) {
         setAllergies(profile.allergies.split(',').map(item => item.trim()));
+      } else {
+        setAllergies([]);
       }
     }
   }, [profile]);
@@ -81,11 +84,14 @@ const MedicalInfo = () => {
       toast.error("Failed to update allergies", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
+      // Revert the local state on error
+      setAllergies(allergies);
     }
   };
   
   const handleSaveMedicalInfo = async () => {
     try {
+      console.log("Saving medical info:", { bloodType, medications, medicalConditions });
       await updateProfileMutation.mutateAsync({
         blood_type: bloodType,
         medications,
@@ -98,6 +104,7 @@ const MedicalInfo = () => {
       
       setIsEditing(false);
     } catch (error) {
+      console.error("Error saving medical info:", error);
       toast.error("Failed to update medical information", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

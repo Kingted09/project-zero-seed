@@ -194,51 +194,51 @@ export const useAddEmergencyContact = () => {
     }) => {
       if (!user) throw new Error("User not authenticated");
 
-      // First add to contacts table
-      const newContact = {
-        name: contact.name,
-        phone: contact.phone,
-        email: contact.email,
-        relationship: contact.relationship,
-        type: "personal",
-        is_favorite: true,
-        is_emergency_contact: true,
-        user_id: user.id,
-      };
-      
-      const { data, error } = await supabase
-        .from('contacts')
-        .insert(newContact)
-        .select()
-        .single();
-      
-      if (error) {
-        throw new Error(error.message);
-      }
+      try {
+        // First add to contacts table
+        const newContact = {
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email || null,
+          relationship: contact.relationship || null,
+          type: "personal",
+          is_favorite: true,
+          is_emergency_contact: true,
+          user_id: user.id,
+        };
+        
+        const { data, error } = await supabase
+          .from('contacts')
+          .insert(newContact)
+          .select()
+          .single();
+        
+        if (error) throw error;
 
-      // Then also update the user's profile with this emergency contact
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          emergency_contact_name: contact.name,
-          emergency_contact_phone: contact.phone,
-        })
-        .eq('id', user.id);
+        // Then update the user's profile with this emergency contact
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            emergency_contact_name: contact.name,
+            emergency_contact_phone: contact.phone,
+            emergency_contact_email: contact.email || null,
+          })
+          .eq('id', user.id);
 
-      if (profileError) {
-        // Log error but don't fail the operation
-        console.error("Error updating profile emergency contacts:", profileError);
+        if (profileError) {
+          // Log error but don't fail the operation
+          console.error("Error updating profile emergency contacts:", profileError);
+        }
+        
+        return data as Contact;
+      } catch (error) {
+        console.error("Failed to add emergency contact:", error);
+        throw error;
       }
-      
-      return data as Contact;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['contacts'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['profile'],
-      });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 };
