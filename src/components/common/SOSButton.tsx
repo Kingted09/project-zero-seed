@@ -1,3 +1,4 @@
+
 import { AlertOctagon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -45,7 +46,7 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Fetch contacts that are emergency contacts
+        // Use a more specific type annotation for the query result
         const { data, error } = await supabase
           .from('contacts')
           .select('name, phone')
@@ -54,8 +55,11 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
         
         if (error) throw error;
         
+        // Use a type assertion to help TypeScript understand the structure
+        const contactsData = data as Array<{ name: string; phone: string }>;
+        
         // Map contacts to ensure they have all required fields
-        const contactsWithEmail: EmergencyContact[] = (data || []).map(contact => ({
+        const contactsWithEmail: EmergencyContact[] = contactsData.map(contact => ({
           name: contact.name || 'Emergency Contact',
           phone: contact.phone || '',
           email: '' // Default empty email if column doesn't exist
