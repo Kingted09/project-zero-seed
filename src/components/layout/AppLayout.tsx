@@ -1,6 +1,6 @@
 
 import { Outlet } from 'react-router-dom';
-import { BottomNavigation } from '@/components/navigation/BottomNavigation';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 
 const AppLayout = () => {
   return (

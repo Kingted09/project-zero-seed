@@ -6,6 +6,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define a type for our resource
+type Resource = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  location: string;
+  contact_info: string;
+  website?: string;
+  image_url?: string;
+  created_at: string;
+}
+
 const ResourceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -13,6 +26,7 @@ const ResourceDetail = () => {
   const { data: resource, isLoading } = useQuery({
     queryKey: ['resource', id],
     queryFn: async () => {
+      // Using from('resources') to query a custom table that isn't in the TypeScript definitions
       const { data, error } = await supabase
         .from('resources')
         .select('*')
@@ -20,7 +34,7 @@ const ResourceDetail = () => {
         .single();
         
       if (error) throw error;
-      return data;
+      return data as Resource;
     }
   });
 
