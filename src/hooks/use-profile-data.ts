@@ -14,6 +14,7 @@ interface ProfileData {
   created_at?: string;
   address?: string | null;
   allergies?: string | null;
+  blood_type?: string | null; // Correct property name
   // Additional user metadata from auth
   email?: string | null;
   display_name?: string | null;

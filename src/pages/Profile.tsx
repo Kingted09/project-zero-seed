@@ -70,7 +70,7 @@ const Profile = () => {
         location: profileData.city ? `${profileData.city}, ${profileData.state || ''}`.trim() : 'No location set',
         phone: profileData.phone || 'No phone set',
         email: user?.email || 'No email set',
-        bloodType: profileData.bloodType || "", // Changed from blood_type to bloodType
+        bloodType: profileData.blood_type || "", // Updated to use correct property name
         allergies: allergyArray,
         emergencyContacts: [],
       });

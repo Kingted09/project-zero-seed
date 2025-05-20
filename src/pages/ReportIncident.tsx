@@ -89,8 +89,10 @@ const ReportIncident = () => {
       
       // Also create an alert based on the report
       if (latitude && longitude) {
+        // Fix the alert creation by using the correct field names
         await supabase.from('alerts').insert({
-          description: title, // Use title as description
+          title: title, // Include title
+          description: description, // Pass description
           alert_type: incidentType as "weather" | "police" | "fire" | "health" | "other",
           latitude,
           longitude,

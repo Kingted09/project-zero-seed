@@ -1,4 +1,3 @@
-
 import { AlertOctagon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -46,17 +45,17 @@ const SOSButton = ({ hidden = false }: SOSButtonProps) => {
       if (!user) return;
       
       try {
-        // Check if contacts table has email column
-        const { data: columns, error: columnsError } = await supabase
+        // Fetch contacts that are emergency contacts
+        const { data, error } = await supabase
           .from('contacts')
           .select('name, phone')
           .eq('user_id', user.id)
           .eq('is_emergency_contact', true);
         
-        if (columnsError) throw columnsError;
+        if (error) throw error;
         
         // Map contacts to ensure they have all required fields
-        const contactsWithEmail: EmergencyContact[] = (columns || []).map(contact => ({
+        const contactsWithEmail: EmergencyContact[] = (data || []).map(contact => ({
           name: contact.name || 'Emergency Contact',
           phone: contact.phone || '',
           email: '' // Default empty email if column doesn't exist

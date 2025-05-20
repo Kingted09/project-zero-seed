@@ -76,7 +76,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     
     // Add click listener if needed
     if (onMapClick) {
-      newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
+      newMap.addListener('click', (event: any) => {
         if (event.latLng && onMapClick) {
           const clickedPos = {
             lat: event.latLng.lat(),

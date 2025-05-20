@@ -88,5 +88,9 @@ declare namespace google {
     interface MapsEventListener {
       remove(): void;
     }
+    
+    interface MapMouseEvent {
+      latLng?: LatLng;
+    }
   }
 }
