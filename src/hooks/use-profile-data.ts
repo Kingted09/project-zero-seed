@@ -14,7 +14,12 @@ interface ProfileData {
   created_at?: string;
   address?: string | null;
   allergies?: string | null;
-  blood_type?: string | null; // Correct property name
+  blood_type?: string | null;
+  medications?: string | null;
+  medical_conditions?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  emergency_contact_email?: string | null;
   // Additional user metadata from auth
   email?: string | null;
   display_name?: string | null;

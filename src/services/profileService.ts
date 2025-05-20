@@ -3,6 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+interface ProfileData {
+  id?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar_url?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  state?: string | null;
+  address?: string | null;
+  allergies?: string | null;
+  blood_type?: string | null;
+  medications?: string | null;
+  medical_conditions?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  emergency_contact_email?: string | null;
+  [key: string]: any;
+}
+
 // Get profile data
 export const useGetProfile = () => {
   const { user } = useAuth();
@@ -19,7 +38,7 @@ export const useGetProfile = () => {
         .single();
         
       if (error) throw error;
-      return data;
+      return data as ProfileData;
     },
     enabled: !!user,
   });
@@ -31,7 +50,7 @@ export const useUpdateProfile = () => {
   const { user } = useAuth();
   
   return useMutation({
-    mutationFn: async (profileData: any) => {
+    mutationFn: async (profileData: Partial<ProfileData>) => {
       if (!user) throw new Error('Not authenticated');
       
       const { data, error } = await supabase
